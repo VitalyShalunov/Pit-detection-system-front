@@ -3,10 +3,28 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+// import { createGlobalStyle } from 'styled-components';
+// import { ToastContainer } from 'react-toastify';
+// import stylesForNotificationToasts from './styles/toastify';
+// const GlobalStyle = createGlobalStyle`
+//         ${stylesForNotificationToasts.map((i) => i)}
+//     `;
+
 
 ReactDOM.render(
   <React.StrictMode>
+    {/* <GlobalStyle /> */}
     <App />
+    {/* <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar
+      draggable={false}
+      closeOnClick={false}
+      pauseOnHover={false}
+      pauseOnFocusLoss={false}
+      closeButton={false}
+    /> */}
   </React.StrictMode>,
   document.getElementById('root')
 );

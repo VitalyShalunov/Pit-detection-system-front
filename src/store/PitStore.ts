@@ -5,7 +5,6 @@ export class PitStore {
     public static async loadPits() {
         try {
             const pits = await fetchFunctionApi<Pit[]>('/pits');
-            console.log(pits);
             
             if (pits && Array.isArray(pits)) {
                 return pits;
@@ -25,7 +24,7 @@ export class PitStore {
             try {
                 delete (editedPit as any).id;
                 const answer = await patchFunctionApi<any>(`/pits/${id}`, editedPit);
-                if (answer.status === 204) {
+                if (answer) {
                     return true;
                 }
             } catch (error) {
@@ -53,10 +52,7 @@ export class PitStore {
     public static deletePit = async (id: string) => {
         if (id) {
             try {
-                const answer = await deleteFunctionApi<any>(`/pits/${id}`);
-                if (answer.status === 204) {
-                    return true;
-                }
+                return await deleteFunctionApi(`/pits/${id}`);
             } catch (error) {
                 console.error('Unexpected error has occurred when deleting client.', error);
                 return false;

@@ -111,10 +111,9 @@ export const putFunctionApi = async <T>(urlParams: string | URL, body: any): Pro
     return handleResponse<T>(res);
 };
 
-export const deleteFunctionApi = async <T>(urlParams: string | URL): Promise<T> => {
+export const deleteFunctionApi = async (urlParams: string | URL): Promise<boolean> => {
     const res = await fetch(`${API_URL}${urlParams}`, {
         method: 'DELETE',
-        credentials: 'include',
     });
-    return handleResponse<T>(res);
+    return res.ok;
 };

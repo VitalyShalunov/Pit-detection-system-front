@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { YMaps, Map, Placemark, Clusterer } from 'react-yandex-maps';
 
 import { AddNewPoint, MapContainer, MapContainerWrapper } from '../../styles/Map';
-import { Divider, Fab, Tooltip } from '@mui/material';
+import { Alert, Divider, Fab, Snackbar, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import POINTS from "./points";
 import SelectedPoint from './SelectedPoint';
 import { CreateNewTip } from '../CreateNewTip';
 import { EditTip } from './EditBlock';
-import { MapState, Pit } from '../../interfaces/Point';
+import { MapState, Notify, Pit } from '../../interfaces/Point';
 import { PitStore } from '../../store/PitStore';
 import { useAsyncEffect } from '../../utils/useAsyncEffect';
+
+import 'react-notifications/lib/notifications.css';
 
 const YandexMap = () => {
     const [selectedPoint, setSelectedPoint] = useState<Pit | null>(null);
@@ -24,6 +26,12 @@ const YandexMap = () => {
 
     const [pits, setPits] = useState<Pit[]>([]);
 
+    const [notify, setNotify] = useState<Notify>({
+        msg: '',
+        type: 'success',
+        isShow: false,
+    });
+
     const onPlacemarkClick = (point: any) => () => {
         setSelectedPoint(point);
     };
@@ -34,27 +42,49 @@ const YandexMap = () => {
 
     const closeCreateSitPopup = () => setIsCreatePitOpen(false);
 
-    const onCreatePit = async (pit: Omit<Pit, '_id'>) => {
+    const onCreatePit = async (pit: Omit<Pit, '_id'>, markerIsCreated?: boolean) => {
         let answ = await PitStore.createPit(pit);
 
-        const currPits = pits;
-        (pit as any) = { ...pit, _id: answ };
-        currPits.push(pit as any);
-        setPits([...currPits]);
-        closeCreateSitPopup()
+        if (answ) {
+            const currPits = pits;
+
+            (pit as any) = { ...pit, _id: answ, images: selectedPoint?.images ?? []};
+
+            if (markerIsCreated) {
+                const idx = currPits.findIndex(({ coords }) => (
+                    coords[0] === selectedPoint?.coords[0] && coords[1] === selectedPoint?.coords[1])
+                );
+
+                currPits.splice(idx, 1, pit as any);
+                setPits([...currPits]);
+            } else {
+                currPits.push(pit as any);
+                setPits([...currPits]);
+                closeCreateSitPopup()
+            }
+            
+            showNotify('success', 'Pit was added');
+        } else {
+            showNotify('error', 'Pit wasn\'t added');
+        }
     }
 
     const onEditPit = async (pit: Omit<Pit, 'images'>) => {
         if (selectedPoint) {
             let answ = await PitStore.editPit(pit._id, { ...pit, images: selectedPoint.images });
-            
-            const currPits = pits;
-            const idx = currPits.findIndex(({ _id }) => _id === selectedPoint._id);
+            if (answ) {
+                const currPits = pits;
+                const idx = currPits.findIndex(({ _id }) => _id === selectedPoint._id);
+    
+                (pit as any) = { ...pit, _id: answ };
+    
+                currPits.splice(idx, 1, pit as any);
+                setPits([...currPits]);
 
-            (pit as any) = { ...pit, _id: answ };
-
-            currPits.splice(idx, 1, pit as any);
-            setPits([...currPits]);
+                showNotify('success', 'Pit was updated');
+            } else {
+                showNotify('error', 'Pit wasn\'t updated');
+            }
         }
     }
 
@@ -115,7 +145,13 @@ const YandexMap = () => {
         setPits([...pits]);
         setSelectedPoint(null);
         if (id !== '0') {
-            await PitStore.deletePit(id);
+            const answ = await PitStore.deletePit(id);
+
+            if (answ) {
+                showNotify('success', 'Pit was deleted');
+            } else {
+                showNotify('error', 'Pit wasn\'t deleted');
+            }
         }
     }
 
@@ -130,6 +166,24 @@ const YandexMap = () => {
             default:
                 break;
         }
+    }
+
+    const showNotify = (type: 'success' | 'info' | 'error', msg: string) => {
+        const not: Notify = {
+            type,
+            msg,
+            isShow: true,
+        }
+        setNotify({ ...not });
+    };
+
+    const closeNotify = () => {
+        const not: Notify = {
+            type: 'success',
+            msg: '',
+            isShow: false,
+        }
+        setNotify({ ...not });
     }
 
     useAsyncEffect(async () => {
@@ -216,12 +270,18 @@ const YandexMap = () => {
                         if (pit._id !== '0') {
                             onEditPit(pit)
                         } else {
-                            onCreatePit(pit as any);
+                            onCreatePit(pit as any, true);
                         }
                     }}
                     onDelete={deletePit}
                     onEditCategoryPit={onEditCategoryPit}
                 />}
+                
+            <Snackbar open={notify.isShow} autoHideDuration={3000} onClose={closeNotify} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                <Alert onClose={closeNotify} severity={notify.type} sx={{ width: '100%' }}>
+                    {notify.msg}
+                </Alert>
+            </Snackbar>
         </MapContainerWrapper>
     );
 }

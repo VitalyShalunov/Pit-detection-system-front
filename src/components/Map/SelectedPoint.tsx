@@ -39,7 +39,7 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
         }
         const convertedImages: string[] = await Promise.all(promises);
 
-        const currFiles = images;
+        const currFiles = point?.images ?? [];
         currFiles.push(...convertedImages);
 
         setImages([...currFiles]);
@@ -60,9 +60,9 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
             if (currentImageIdx !== null) {
                 let setIdx = 0;
                 if (delta > 0) {
-                    setIdx = currentImageIdx + 1 === images.length ? 0 : currentImageIdx + 1;
+                    setIdx = currentImageIdx + 1 >= point!.images.length ? 0 : currentImageIdx + 1;
                 } else {
-                    setIdx = currentImageIdx - 1 === -1 ? images.length - 1 : currentImageIdx - 1;
+                    setIdx = currentImageIdx - 1 === -1 ? point!.images.length - 1 : currentImageIdx - 1;
                 }
                 currentImageIdx = setIdx;
                 
@@ -104,7 +104,9 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
         }
     }
 
-
+    console.log('images', images.length);
+    console.log('currentImageIdx', currentImageIdx);
+    
     useEffect(() => {
         let img = myRef.current
 
@@ -114,7 +116,7 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
     }, [currentImageIdx]);
 
     useEffect(() => {
-        if (point) {
+        if (point && !images.length) {
             setImages([...point.images]);
 
             if (!currentImageIdx) {
