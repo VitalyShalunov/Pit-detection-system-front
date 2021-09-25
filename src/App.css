@@ -36,3 +36,10 @@
     transform: rotate(360deg);
   }
 }
+
+
+ymaps.ymaps-2-1-79-map:parent(div) {
+  display: block;
+  background-color: #61dafb;
+  /* display design changes when focused */
+}
