@@ -101,6 +101,7 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
                     currentImageIdx = currentImageIdx! - 1;
                 }
             }
+            forceUpdate();
         }
     }
 
@@ -116,12 +117,14 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
     }, [currentImageIdx]);
 
     useEffect(() => {
-        if (point && !images.length) {
+        if (point) {
             setImages([...point.images]);
 
             if (!currentImageIdx) {
                 currentImageIdx = 0;
             }
+
+            forceUpdate();
                         
             setTimeout(() => {
                 setStart(true);

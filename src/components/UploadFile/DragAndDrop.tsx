@@ -14,13 +14,11 @@ const DragAndDrop: FC<DragAndDropProps> = ({ styles = {}, handleDropProps, child
     const dropRef = React.createRef<HTMLDivElement>();
 
     const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-        console.log('handleDrag');
         e.preventDefault();
         e.stopPropagation();
     };
 
     const handleDragIn = (e: React.DragEvent<HTMLDivElement>) => {
-        console.log('handleDragIn');
         e.preventDefault();
         e.stopPropagation();
         dragCounter++
@@ -30,7 +28,6 @@ const DragAndDrop: FC<DragAndDropProps> = ({ styles = {}, handleDropProps, child
     };
 
     const handleDragOut = (e: React.DragEvent<HTMLDivElement>) => {
-        console.log('handleDragOut');
         e.preventDefault();
         e.stopPropagation();
         dragCounter--;
@@ -40,7 +37,6 @@ const DragAndDrop: FC<DragAndDropProps> = ({ styles = {}, handleDropProps, child
     }
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        console.log('handleDrop');
         e.preventDefault();
         e.stopPropagation();
         setDrag(false);

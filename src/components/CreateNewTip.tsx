@@ -23,18 +23,12 @@ export interface CreateSeasonTicket {
     onCreate: (pit: Omit<Pit, '_id'>) => void;
 }
 
-const useStyles = makeStyles((theme: any) => createStyles({
-    root: {
-        backgroundColor: 'red',
-    },
-}));
-
 export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) => {
     const [uploadedFileNames, setUploadedFileNames] = useState<string[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
     const [coords, setCoords] = useState<[string, string]>(['', '']);
     const [description, setDescription] = useState<string>('');
-    const [category, setCategory] = useState<number>(0);
+    const [category, setCategory] = useState<number>(1);
 
     const onCreatePit = () => {
         let check = true;
@@ -53,7 +47,13 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
             description,
             category,
             images: uploadedFiles,
-        })
+        });
+
+        setUploadedFileNames([...[]]);
+        setUploadedFiles([...[]]);
+        setCoords(['', '']);
+        setDescription('');
+        setCategory(1);
     };
 
     const handleLoadFiles = async (files: FileList) => {
@@ -66,10 +66,10 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
         }
         const convertedImages: string[] = await Promise.all(promises);
 
-        const currNames = uploadedFileNames;
+        const currNames = [ ...uploadedFileNames ];
         currNames.push(...fileList);
 
-        const currFiles = uploadedFiles;
+        const currFiles = [ ...uploadedFiles ];
         currFiles.push(...convertedImages);
 
         setUploadedFiles([...currFiles]);
@@ -77,8 +77,8 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
     }
 
     const deleteImg = (idx: number) => {
-        const images = uploadedFiles;
-        const imageNames = uploadedFileNames;
+        const images = [ ...uploadedFiles ];
+        const imageNames = [ ...uploadedFileNames ];
 
         images.splice(idx, 1);
         imageNames.splice(idx, 1);
@@ -144,9 +144,6 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
                         onChange={({ target: { value } }) => { setCategory(Number(value))}}
                         label="Category"
                         >
-                        <MenuItem value={0}>
-                            <em>None</em>
-                        </MenuItem>
                         <MenuItem value={1}>First</MenuItem>
                         <MenuItem value={2}>Second</MenuItem>
                         <MenuItem value={3}>Third</MenuItem>

@@ -92,9 +92,6 @@ export const EditTip: FC<EditTipProps> = ({
                         }}
                         label="Category"
                         >
-                        <MenuItem value={0}>
-                            <em>None</em>
-                        </MenuItem>
                         <MenuItem value={1}>First</MenuItem>
                         <MenuItem value={2}>Second</MenuItem>
                         <MenuItem value={3}>Third</MenuItem>
