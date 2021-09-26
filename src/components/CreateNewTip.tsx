@@ -47,13 +47,7 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
             description,
             category,
             images: uploadedFiles,
-        });
-
-        setUploadedFileNames([...[]]);
-        setUploadedFiles([...[]]);
-        setCoords(['', '']);
-        setDescription('');
-        setCategory(1);
+        })
     };
 
     const handleLoadFiles = async (files: FileList) => {
@@ -66,10 +60,10 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
         }
         const convertedImages: string[] = await Promise.all(promises);
 
-        const currNames = [ ...uploadedFileNames ];
+        const currNames = uploadedFileNames;
         currNames.push(...fileList);
 
-        const currFiles = [ ...uploadedFiles ];
+        const currFiles = uploadedFiles;
         currFiles.push(...convertedImages);
 
         setUploadedFiles([...currFiles]);
@@ -77,8 +71,8 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
     }
 
     const deleteImg = (idx: number) => {
-        const images = [ ...uploadedFiles ];
-        const imageNames = [ ...uploadedFileNames ];
+        const images = uploadedFiles;
+        const imageNames = uploadedFileNames;
 
         images.splice(idx, 1);
         imageNames.splice(idx, 1);

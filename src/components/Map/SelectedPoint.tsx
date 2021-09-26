@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pit } from "../../interfaces/Point";
 import { ImagesBlock, SelectedPointContaciner, UploadedImage } from "../../styles/SelectedPointBlock";
 import toBase64 from "../../utils/toBase64";
@@ -7,29 +7,33 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import ClearIcon from '@mui/icons-material/Clear';
 
 interface SelectedPointProps {
-    point: Pit | null,
-    update: (images: string[]) => void;
+    images: string[],
+    isChange: boolean,
+    changeAddImgSelectedPoint: (imgs: string[]) => void;
     deleteImage: (idx: number) => void;
     hideSelectedPoint: () => void;
 }
 
 let skipScrollHandle = false;
-let currentImageIdx: number | null = null;
+let countImages = 0;
+let selectedImg = 0;
+let selectedIdx = 0;
 
-//create your forceUpdate hook
-function useForceUpdate() {
-    const [value, setValue] = useState(0); // integer state
-    return () => setValue(value => value + 1); // update the state to force render
-}
-
-const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hideSelectedPoint }) => {
-    const [images, setImages] = useState<string[]>(point?.images ?? []);
-    const [start, setStart] = useState<boolean>(false);
+const SelectedPoint: FC<SelectedPointProps> = ({
+    images,
+    isChange,
+    changeAddImgSelectedPoint,
+    deleteImage,
+    hideSelectedPoint,
+}) => {
+    console.log('selectedImg', selectedImg);
+    console.log('images', images.length);
+    countImages = images.length;
+    
+    const [selectedPitIdx, setSelectedPitIdx] = useState<number>(0);
     // const [files, setFiles] = useState
     const myRef = React.createRef<HTMLImageElement>();
 
-    // call your hook here
-    const forceUpdate = useForceUpdate();
 
     const handleDrop = async (files: FileList) => {
         const promises = [];
@@ -39,13 +43,10 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
         }
         const convertedImages: string[] = await Promise.all(promises);
 
-        const currFiles = point?.images ?? [];
-        currFiles.push(...convertedImages);
-
-        setImages([...currFiles]);
-        update(currFiles);
-        currentImageIdx = currFiles.length - 1;
-        forceUpdate();
+        const currentImageIdx = countImages + convertedImages.length - 1;
+        selectedImg = currentImageIdx;
+        setSelectedPitIdx(currentImageIdx);
+        changeAddImgSelectedPoint(convertedImages);
     }
 
     const onWheel = (e: any) => {
@@ -56,20 +57,17 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
 
         if (!skipScrollHandle) {
             skipScrollHandle = true;
-
-            if (currentImageIdx !== null) {
-                let setIdx = 0;
-                if (delta > 0) {
-                    setIdx = currentImageIdx + 1 >= point!.images.length ? 0 : currentImageIdx + 1;
-                } else {
-                    setIdx = currentImageIdx - 1 === -1 ? point!.images.length - 1 : currentImageIdx - 1;
-                }
-                currentImageIdx = setIdx;
-                
-                // eslint-disable-next-line react-hooks/rules-of-hooks
-                forceUpdate();
+            const currentImageIdx = selectedImg;
+            let setIdx = 0;
+            if (delta > 0) {
+                setIdx = currentImageIdx + 1 === countImages ? 0 : currentImageIdx + 1;
+            } else {
+                setIdx = currentImageIdx - 1 === -1 ? countImages - 1 : currentImageIdx - 1;
             }
+            selectedImg = setIdx;
+            setSelectedPitIdx(setIdx);
 
+            
             setTimeout(() => {
                 skipScrollHandle = false;
             }, 500);
@@ -81,66 +79,52 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
     }
 
     const handleHideSelectedPoint = () => {
-        setStart(false);
         hideSelectedPoint();
     };
 
     const deleteImg = () => {
-        const currImages = images;
-        if (typeof currentImageIdx === 'number') {
-            currImages.splice(currentImageIdx!, 1);
-            deleteImage(currentImageIdx!);
+        if (typeof selectedPitIdx === 'number') {
+            deleteImage(selectedImg);
 
-            setImages([...currImages]);
-            if (currImages.length === 0) {
-                currentImageIdx = null;
+            if (countImages - 1 === 0) {
+                selectedImg = 0;
+                setSelectedPitIdx(0);
             } else {
-                if (currentImageIdx === 0) {
-                    currentImageIdx = currImages.length - 1;
+                if (selectedImg === 0) {
+                    selectedImg = countImages - 2;
+                    setSelectedPitIdx(countImages - 2);
                 } else {
-                    currentImageIdx = currentImageIdx! - 1;
+                    selectedImg = selectedImg - 1;
+                    setSelectedPitIdx(countImages - 1);
                 }
             }
-            forceUpdate();
         }
     }
 
-    console.log('images', images.length);
-    console.log('currentImageIdx', currentImageIdx);
-    
     useEffect(() => {
-        let img = myRef.current
+        setTimeout(() => {
+            let img = myRef.current
 
-        if (img) {
-            img.addEventListener("wheel", onWheel);
-        }
-    }, [currentImageIdx]);
-
-    useEffect(() => {
-        if (point) {
-            setImages([...point.images]);
-
-            if (!currentImageIdx) {
-                currentImageIdx = 0;
+            if (img) {
+                img.addEventListener("wheel", onWheel);
             }
+        }, 300);
+    }, [selectedPitIdx, images, images.length, myRef]);
 
-            forceUpdate();
-                        
-            setTimeout(() => {
-                setStart(true);
-            }, 200);
-        }
-    }, [point])
+    useEffect(() => {
+        selectedImg = 0;
+        setSelectedPitIdx(0);
+    }, [isChange]);
     return (
         <>
-            {point && <DragAndDrop handleDropProps={handleDrop} styles={{ marginLeft: '25px' }} >
+            {<DragAndDrop handleDropProps={handleDrop} styles={{ marginLeft: '25px' }} >
 
-                {Boolean(images.length) && <ImagesBlock>
-                    {currentImageIdx !== null &&
+                {Boolean(images?.length) && <ImagesBlock>
+                    {selectedImg !== null &&
                         <>
                             <UploadedImage
                                 ref={myRef}
-                                src={images[currentImageIdx]}
+                                src={images[selectedImg ?? 0]}
                             />
 
                             <ClearIcon fontSize="medium" style={{ cursor: 'pointer ' }} onClick={deleteImg} />
@@ -149,7 +133,7 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
                 </ ImagesBlock>}
 
                 {!images.length &&
-                    <SelectedPointContaciner start={start} >Upload images</SelectedPointContaciner>
+                    <SelectedPointContaciner start={true}>Upload images</SelectedPointContaciner>
                 }
 
                 <UnfoldLessIcon onClick={handleHideSelectedPoint} style={{ cursor: 'pointer ' }} />
@@ -160,4 +144,43 @@ const SelectedPoint: FC<SelectedPointProps> = ({ point, update, deleteImage, hid
     )
 }
 
+// const areEqual = (prevState: SelectedPointProps, nextState: SelectedPointProps) => {
+//     const { point: prevPoint, selectedPitIdx: prevSelectedPitIdx } = prevState;
+//     const { point: nextPoint, selectedPitIdx: nextSelectedPitIdx } = nextState;
+
+//     countImages = nextPoint?.images?.length ?? 0;
+//     selectedImg = nextPoint?.selectedImg ?? 0;
+//     selectedIdx = nextSelectedPitIdx;
+
+//     if (!prevPoint || !nextPoint) {
+//         return false;
+//     }
+
+//     if (!prevPoint !== !nextPoint) {
+//         return false;
+//     }
+
+//     if (!prevSelectedPitIdx !== !nextSelectedPitIdx) {
+//         return false;
+//     }
+
+//     const { images: prevImages, selectedImg: prevSelectedImg, _id: prevId } = prevPoint;
+//     const { images: nextImages, selectedImg: nextSelectedImg, _id: nextId } = nextPoint;
+
+//     if (prevId !== nextId) {
+//         return false;
+//     }
+
+//     if (prevImages?.length !== nextImages?.length) {
+//         return false;
+//     }
+
+//     if (prevSelectedImg !== nextSelectedImg) {
+//         return false;
+//     }
+
+//     return true;
+// }
+
+// export default memo(SelectedPoint, areEqual);
 export default SelectedPoint;

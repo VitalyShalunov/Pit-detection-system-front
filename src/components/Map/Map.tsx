@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { YMaps, Map, Placemark, Clusterer } from 'react-yandex-maps';
 
 import { AddNewPoint, MapContainer, MapContainerWrapper } from '../../styles/Map';
@@ -12,10 +12,12 @@ import { MapState, Notify, Pit } from '../../interfaces/Point';
 import { PitStore } from '../../store/PitStore';
 import { useAsyncEffect } from '../../utils/useAsyncEffect';
 
-import 'react-notifications/lib/notifications.css';
+let images: string[] = [];
 
-const YandexMap = () => {
+const YandexMap: FC<any> = () => {
     const [selectedPoint, setSelectedPoint] = useState<Pit | null>(null);
+    const [currentImages, setCurrentImages] = useState<string[]>([]);
+    const [isChange, setIsChange] = useState<boolean>(false);
 
     const [isCreatePitOpen, setIsCreatePitOpen] = useState<boolean>(false);
 
@@ -32,8 +34,14 @@ const YandexMap = () => {
         isShow: false,
     });
 
-    const onPlacemarkClick = (point: any) => () => {
-        setSelectedPoint(point);
+    const onPlacemarkClick = (point: Pit, index: number) => () => {
+        console.log('prev', selectedPoint?._id);
+        
+        console.log('next', { ...point }._id);
+        console.log('images', images);
+        setIsChange(!isChange);
+        setCurrentImages([...point.images]);
+        setSelectedPoint({ ...point });
     };
 
     const myFunc = (x: any) => {
@@ -44,25 +52,24 @@ const YandexMap = () => {
 
     const onCreatePit = async (pit: Omit<Pit, '_id'>, markerIsCreated?: boolean) => {
         let answ = await PitStore.createPit(pit);
-
         if (answ) {
             const currPits = pits;
 
-            (pit as any) = { ...pit, _id: answ, images: selectedPoint?.images ?? []};
+            (pit as any) = { ...pit, _id: answ, images: markerIsCreated ? currentImages : pit.images };
 
             if (markerIsCreated) {
                 const idx = currPits.findIndex(({ coords }) => (
                     coords[0] === selectedPoint?.coords[0] && coords[1] === selectedPoint?.coords[1])
                 );
 
-                currPits.splice(idx, 1, pit as any);
+                currPits.splice(idx, 1, (pit as any));
                 setPits([...currPits]);
             } else {
                 currPits.push(pit as any);
                 setPits([...currPits]);
                 closeCreateSitPopup()
             }
-            
+
             showNotify('success', 'Pit was added');
         } else {
             showNotify('error', 'Pit wasn\'t added');
@@ -71,14 +78,12 @@ const YandexMap = () => {
 
     const onEditPit = async (pit: Omit<Pit, 'images'>) => {
         if (selectedPoint) {
-            let answ = await PitStore.editPit(pit._id, { ...pit, images: selectedPoint.images });
+            let answ = await PitStore.editPit(pit._id, { ...pit, images: currentImages });
             if (answ) {
                 const currPits = pits;
                 const idx = currPits.findIndex(({ _id }) => _id === selectedPoint._id);
-    
-                (pit as any) = { ...pit, _id: answ };
-    
-                currPits.splice(idx, 1, pit as any);
+
+                currPits.splice(idx, 1, { ...pit, images: currentImages } as any);
                 setPits([...currPits]);
 
                 showNotify('success', 'Pit was updated');
@@ -101,12 +106,11 @@ const YandexMap = () => {
         }
     }
 
-    const onDragEnd = (coords: [number, number]) => {
+    const onDragEnd = (coords: [number, number], index: number) => {
         if (selectedPoint) {
-            const idx = pits.findIndex(({ _id }) => _id === selectedPoint._id);
-            const currPoint = { ...selectedPoint, coords };
-    
-            pits.splice(idx, 1, currPoint as any);
+            const currPoint = { ...pits[index], coords };
+
+            pits.splice(index, 1, currPoint as any);
             setPits([...pits]);
             setSelectedPoint({ ...currPoint })
         }
@@ -114,10 +118,16 @@ const YandexMap = () => {
 
     const onDeleteImage = (currentImageIdx: number) => {
         if (selectedPoint) {
-            const images = selectedPoint.images;
-            images.splice(currentImageIdx, 1);
+            const cutArray = selectedPoint.images;
+            cutArray.splice(currentImageIdx, 1);
 
-            setSelectedPoint({ ...selectedPoint, images })
+            const newObj = { ...selectedPoint!, images: [...cutArray] };
+
+            images = [...cutArray];
+            console.log('currentImages', currentImages);
+            console.log('images', images);
+            setCurrentImages([...images]);
+            setSelectedPoint({ ...newObj });
         }
     }
 
@@ -125,7 +135,7 @@ const YandexMap = () => {
         const coords = event.get("coords");
         const currPits = pits;
 
-        const newPit = {
+        const newPit: Pit = {
             _id: '0',
             coords,
             images: [],
@@ -135,7 +145,7 @@ const YandexMap = () => {
         currPits.push(newPit);
         setPits([...currPits]);
 
-        setSelectedPoint(newPit);
+        setSelectedPoint({ ...newPit });
     }
 
     const deletePit = async (id: string) => {
@@ -186,6 +196,19 @@ const YandexMap = () => {
         setNotify({ ...not });
     }
 
+    const changeAddImgSelectedPoint = (imgs: string[]) => {
+        const imagesS = [ ...images, ...imgs ];
+        const newObj = { ...selectedPoint!, images: [...images] };
+
+        images = [...imagesS];
+        console.log('currentImages', currentImages);
+        console.log('images', images);
+        setCurrentImages([...images]);
+        setSelectedPoint({ ...newObj });
+    }
+
+    console.log(206, 'currentImages', currentImages);
+
     useAsyncEffect(async () => {
         const receivedPits = await PitStore.loadPits();
         setPits([...receivedPits])
@@ -214,9 +237,9 @@ const YandexMap = () => {
                                     modules={["geoObject.addon.balloon", "geoObject.addon.hint"]}
                                     key={index}
                                     geometry={point.coords}
-                                    onClick={onPlacemarkClick(point)}
+                                    onClick={onPlacemarkClick(point, index)}
                                     // onDragEnd={(e: any) => console.log(e.get('target').geometry.getCoordinates())}
-                                    onDragEnd={(e: any) => onDragEnd(e.get('target').geometry.getCoordinates())}
+                                    onDragEnd={(e: any) => onDragEnd(e.get('target').geometry.getCoordinates(), index)}
                                     // onDragEnd={onDragEnd}
                                     properties={{
                                         item: index,
@@ -235,12 +258,13 @@ const YandexMap = () => {
                     </Map>
                 </YMaps>
 
-                <SelectedPoint
+                {selectedPoint && <SelectedPoint
                     deleteImage={onDeleteImage}
-                    update={(images) => setSelectedPoint({ ...selectedPoint!, images })}
-                    point={selectedPoint}
+                    isChange={isChange}
+                    changeAddImgSelectedPoint={changeAddImgSelectedPoint}
+                    images={currentImages}
                     hideSelectedPoint={() => setSelectedPoint(null)}
-                />
+                />}
 
                 <AddNewPoint>
                     <Tooltip
@@ -263,7 +287,7 @@ const YandexMap = () => {
 
             <Divider light />
 
-            {selectedPoint && 
+            {selectedPoint &&
                 <EditTip
                     tip={selectedPoint}
                     onEdit={(pit) => {
@@ -276,7 +300,6 @@ const YandexMap = () => {
                     onDelete={deletePit}
                     onEditCategoryPit={onEditCategoryPit}
                 />}
-                
             <Snackbar open={notify.isShow} autoHideDuration={3000} onClose={closeNotify} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                 <Alert onClose={closeNotify} severity={notify.type} sx={{ width: '100%' }}>
                     {notify.msg}
