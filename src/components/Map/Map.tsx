@@ -69,7 +69,7 @@ const YandexMap: FC<any> = () => {
                 setPits([...currPits]);
                 closeCreateSitPopup()
             }
-
+            setSelectedPoint({ ...pit } as any);
             showNotify('success', 'Pit was added');
         } else {
             showNotify('error', 'Pit wasn\'t added');
