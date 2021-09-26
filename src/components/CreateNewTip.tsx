@@ -47,7 +47,13 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
             description,
             category,
             images: uploadedFiles,
-        })
+        });
+
+        setUploadedFileNames([]);
+        setUploadedFiles([]);
+        setCoords(['', '']);
+        setDescription('');
+        setCategory(1);
     };
 
     const handleLoadFiles = async (files: FileList) => {
