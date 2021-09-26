@@ -98,8 +98,8 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
                             type="text"
                             fullWidth
                             variant="standard"
-                            value={coords[0]}
-                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([value, coords[1]])}
+                            value={coords[1]}
+                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([coords[0], value])}
                         />
                     </Grid>
 
@@ -112,8 +112,8 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
                             type="text"
                             fullWidth
                             variant="standard"
-                            value={coords[1]}
-                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([coords[0], value])}
+                            value={coords[0]}
+                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([value, coords[1]])}
                         />
                     </Grid>
 
@@ -125,22 +125,22 @@ export const CreateNewTip = ({ isOpen, onClose, onCreate }: CreateSeasonTicket) 
                             value={description}
                             onChange={({ target: { value } }: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(value)}
                             style={{ minWidth: '99%', maxWidth: '99%', border: '1px solid #9c27b0' }}
-                            />
+                        />
                     </Grid>
 
                     <Grid item xs={12}>
-                    <Select
-                        labelId="demo-simple-select-standard-label"
-                        id="demo-simple-select-standard"
-                        value={category}
-                        style={{ width: '100%', marginTop: '10px' }}
-                        color='secondary'
-                        onChange={({ target: { value } }) => { setCategory(Number(value))}}
-                        label="Category"
+                        <Select
+                            labelId="demo-simple-select-standard-label"
+                            id="demo-simple-select-standard"
+                            value={category}
+                            style={{ width: '100%', marginTop: '10px' }}
+                            color='secondary'
+                            onChange={({ target: { value } }) => { setCategory(Number(value)) }}
+                            label="Category"
                         >
-                        <MenuItem value={1}>First</MenuItem>
-                        <MenuItem value={2}>Second</MenuItem>
-                        <MenuItem value={3}>Third</MenuItem>
+                            <MenuItem value={1}>First</MenuItem>
+                            <MenuItem value={2}>Second</MenuItem>
+                            <MenuItem value={3}>Third</MenuItem>
                         </Select>
                     </Grid>
                 </Grid>

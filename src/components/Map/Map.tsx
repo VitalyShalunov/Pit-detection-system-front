@@ -112,7 +112,9 @@ const YandexMap: FC<any> = () => {
 
             pits.splice(index, 1, currPoint as any);
             setPits([...pits]);
-            setSelectedPoint({ ...currPoint })
+            setSelectedPoint({ ...currPoint });
+            images = [];
+            setCurrentImages([]);
         }
     }
 

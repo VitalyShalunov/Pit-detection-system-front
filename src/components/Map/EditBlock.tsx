@@ -51,7 +51,7 @@ export const EditTip: FC<EditTipProps> = ({
         <>
             <EditContainer isVisible={true} >
                 <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={6}>
                         <TextField
                             autoFocus
                             color='secondary'
@@ -60,8 +60,8 @@ export const EditTip: FC<EditTipProps> = ({
                             type="text"
                             fullWidth
                             variant="standard"
-                            value={coords[0]}
-                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([value, coords[1]])}
+                            value={coords[1]}
+                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([coords[0], value])}
                         />
                     </Grid>
 
@@ -74,8 +74,8 @@ export const EditTip: FC<EditTipProps> = ({
                             type="text"
                             fullWidth
                             variant="standard"
-                            value={coords[1]}
-                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([coords[0], value])}
+                            value={coords[0]}
+                            onChange={({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => setCoords([value, coords[1]])}
                         />
                     </Grid>
 
